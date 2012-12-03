@@ -1,0 +1,164 @@
+<html>
+<head>
+<script type="text/javascript" charset="utf-8" src="../sql/sql.js"></script>
+<script type="text/javascript" charset="utf-8" src="../sql/SQL.prototype.map.js"></script>
+<script type="text/javascript" charset="utf-8" src="../csv/csv.js"></script>
+<script type="text/javascript" charset="utf-8" src="../file/file.js"></script>
+<script type="text/javascript" charset="utf-8">
+  var filters = [];
+  var maps = [];
+  var csv = [];
+  
+  var fromDB = new SQL();
+  var toDB = new SQL();
+  
+  function ImportSQL() {
+    if(toDB.login.username == "") {
+      LoginTo();
+    }
+    if(fromDB.login.username == "" || fromDB.login.password == ""){
+      ImportCSV(); // by default use the CSV to import
+    } 
+    else {
+      LoginFrom();
+    }
+    if(filters[0] == null || maps[0] == null){
+      ImportFiltersMaps();
+    }
+    //fromDB.csv = csv;
+    toDB.map(fromDB, map, filters, updater); // updater is the status callback function
+  }
+  
+  function updater (text) {
+    var element = document.getElementById("Status");
+    if(text.error) {
+      element.style.color = "red";
+      document.getElementById("FromStatusMessage").innerHTML = text.error;
+    } 
+    else {
+      element.style.color = "black";
+      element.innerHTML = text;
+    }
+  }
+  
+  function LoginFrom() {
+    document.getElementById("FromStatusMessage").innerHTML = "";
+    fromDB.login.username = document.getElementById("from_username").value;
+    fromDB.login.password = document.getElementById("from_password").value; 
+    fromDB.login.hostname = document.getElementById("from_hostname").value;
+    var status = fromDB.status();
+    var element = document.getElementById("FromStatus");
+    if(status.error) {
+      element.innerHTML = fromDB.login.hostname + ": Login Failure";
+      element.style.color = "red";
+      document.getElementById("FromStatusMessage").innerHTML = status.error;
+    } 
+    else {
+      element.innerHTML = fromDB.login.hostname + ": Connected!";
+      element.style.color = "green";
+    }
+  }
+  
+  function LoginTo() {
+    document.getElementById("ToStatusMessage").innerHTML = "";
+    toDB.login.username = document.getElementById("to_username").value;
+    toDB.login.password = document.getElementById("to_password").value; 
+    toDB.login.hostname = document.getElementById("to_hostname").value;
+    var status = toDB.status();
+    var element = document.getElementById("ToStatus");
+    if(status.error) {
+      element.innerHTML = toDB.login.hostname + ": Login Failure";
+      element.style.color = "red";
+      document.getElementById("ToStatusMessage").innerHTML = status.error;
+    } 
+    else {
+      element.innerHTML = toDB.login.hostname + ": Connected!";
+      element.style.color = "green";
+    }
+  }
+  
+  function ImportCSV() {
+    var fileObj = document.getElementById("files");
+    var fp = new File(fileObj);
+    fp.read(function (text) {
+      var content = document.getElementById("csv");
+      csv = new CSV(text, {object:true});
+      content.innerHTML = XML([csv[0]]);
+    });
+  }
+  
+  function ImportFiltersMaps() {
+    var fileObj = document.getElementById("filtersmaps");
+    var fp = new File(fileObj);
+    fp.read(function (text) {
+      var content = document.getElementById("maps");
+      content.innerHTML = text;
+    });
+  }
+  
+  // returns XML for a table with the data from csv("filename.csv");
+  var XML = function (csv) {
+    var str = "<table style=\"width:100%;\" border=1>\n"; 
+    str += "<tbody>\n"; 
+    for ( var i=0; i < csv.length; i++){
+      str += '<tr class="row" style=\"width:100%;\">';//<td class="rown">R' + i + '</td>';
+      for (var element in csv[i]){
+        str += '<td class="element">' + element; //+ ":<br /> " + csv[i][element] + '</td>';
+      }
+      str += "</tr>\n";
+    }  
+    str += "</tbody>\n"; 
+    str += "</table>\n";
+    return str;    
+  }
+</script>
+</head>
+<body>     
+<h1>SQL Mapper</h1>
+<div id="input_area" style="clear:right">
+  <div id="ImportFilters" style="background: none repeat scroll 0 0 #E4EDF7;float:left;margin: 10 10 10 10;border: 1px solid #CCCCCC;padding: 15px;border-radius: 4px 4px 4px 4px">
+  <h4 style="margin:0px">Mapping and Filter File:</h4><br />
+  Text File: <input type="file" id="filtersmaps" name="filtersmaps"/> <br />
+  <button onclick="ImportFiltersMaps()" style="margin-top:10">Load Filters</button><br />
+  </div>
+  <div id="Import_Status" style="width:400px;height:300;clear:right;background: none repeat scroll 0 0 #E4EDF7;float:left;margin: 10 10 10 10;border: 1px solid #CCCCCC;padding: 15px;border-radius: 4px 4px 4px 4px">
+  <h4 style="margin:0px">SQL Import Status:</h4><br />
+  <div id="Status"></div>
+  </div>
+  <div id="ImportCSV" style="background: none repeat scroll 0 0 #E4EDF7;float:left;margin: 10 10 10 10;border: 1px solid #CCCCCC;padding: 15px;border-radius: 4px 4px 4px 4px">
+  <h4 style="margin:0px">From: (CSV <span id="CSVStatus"></span>)</h4><br />
+  CSV File: <input type="file" id="files" name="file"/> <br />
+  <button onclick="ImportCSV()" style="margin-top:10">Import CSV</button><br />
+  </div>
+  <div id="databases" style="width:400 px; clear:left">
+    <div id="LoginFrom" style="width:400px;background: none repeat scroll 0 0 #E4EDF7;float:left;margin: 10 10 10 10;border: 1px solid #CCCCCC;padding: 15px;border-radius: 4px 4px 4px 4px">
+    <h4 style="margin:0px">From SQL: (<span id="FromStatus">Database</span>)</h4><br />
+    Username: <input type="text" name="from_username" id="from_username" style="margin: 0 0 4px 4px;"/><br />
+    Password: <input type="password" name="from_password" id="from_password" style="margin: 0 0 4px 4px;"/><br />
+    Hostname: <input type="text" name="from_hostname" id="from_hostname" value="localhost" style="margin: 0 0 4px 4px;"/><br />
+    <button onclick="LoginFrom()" style="margin-top:10">Login</button><br />
+    <div id="FromStatusMessage"></div>
+    </div>
+    <div id="LoginTo" style="width:400px;background: none repeat scroll 0 0 #E4EDF7;float:left;margin: 10 10 10 10;border: 1px solid #CCCCCC;padding: 15px;border-radius: 4px 4px 4px 4px">
+    <h4 style="margin:0px">To SQL: (<span id="ToStatus">Database</span>)</h4><br />
+    Username: <input type="text" name="to_username" id="to_username" style="margin: 0 0 4px 4px;"/><br />
+    Password: <input type="password" name="to_password" id="to_password" style="margin: 0 0 4px 4px;"/><br />
+    Hostname: <input type="text" name="to_hostname" id="to_hostname" value="localhost" style="margin: 0 0 4px 4px;"/><br />
+    <button onclick="LoginTo()" style="margin-top:10">Login</button><br />
+    <div id="ToStatusMessage"></div>
+    </div>
+  </div>
+</div>
+<div id="start_import" style="clear:left">
+  <button onclick="ImportSQL()" style="margin-top:10">Start SQL Import</button><br />
+</div>
+<div id="output_area" style="clear:both">
+  <div><h3>SQL:</h3></div>
+  <div id="sql"></div><br />
+  <div><h3>CSV:</h3></div>
+  <div id="csv"></div>
+  <div><h3>Mappings & Filters:</h3></div>
+  <div id="maps"></div>
+</div>
+</body>
+</html>
