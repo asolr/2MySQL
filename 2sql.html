@@ -1,11 +1,12 @@
 <html>
 <head>
+<link href="styles.css" media="screen" type="text/css" rel="stylesheet">
 <script type="text/javascript" charset="utf-8" src="../sql/sql.js"></script>
-<script type="text/javascript" charset="utf-8" src="../sql/SQL.prototype.map.js"></script>
+<script type="text/javascript" charset="utf-8" src="SQL.prototype.sync.js"></script>
 <script type="text/javascript" charset="utf-8" src="../csv/csv.js"></script>
 <script type="text/javascript" charset="utf-8" src="../file/file.js"></script>
 <script type="text/javascript" charset="utf-8">
-  var filters = [];
+
   var maps = [];
   var csv = [];
   
@@ -13,23 +14,21 @@
   var toDB = new SQL();
   
   function ImportSQL() {
-    if(toDB.login.username == "") {
-      LoginTo();
-    }
+    LoginToDB();
     if(fromDB.login.username == "" || fromDB.login.password == ""){
       ImportCSV(); // by default use the CSV to import
+      fromDB.csv = csv;
     } 
     else {
-      LoginFrom();
+      LoginFromDB();
     }
-    if(filters[0] == null || maps[0] == null){
-      ImportFiltersMaps();
+    if(maps[0] == null){
+      ImportMaps();
     }
-    //fromDB.csv = csv;
-    toDB.map(fromDB, map, filters, updater); // updater is the status callback function
+    toDB.sync(fromDB, maps, Status); 
   }
   
-  function updater (text) {
+  function Status (text) {
     var element = document.getElementById("Status");
     if(text.error) {
       element.style.color = "red";
@@ -41,7 +40,7 @@
     }
   }
   
-  function LoginFrom() {
+  function LoginFromDB() {
     document.getElementById("FromStatusMessage").innerHTML = "";
     fromDB.login.username = document.getElementById("from_username").value;
     fromDB.login.password = document.getElementById("from_password").value; 
@@ -59,7 +58,7 @@
     }
   }
   
-  function LoginTo() {
+  function LoginToDB() {
     document.getElementById("ToStatusMessage").innerHTML = "";
     toDB.login.username = document.getElementById("to_username").value;
     toDB.login.password = document.getElementById("to_password").value; 
@@ -87,12 +86,14 @@
     });
   }
   
-  function ImportFiltersMaps() {
-    var fileObj = document.getElementById("filtersmaps");
+  function ImportMaps() {
+    var fileObj = document.getElementById("mapsfile");
     var fp = new File(fileObj);
     fp.read(function (text) {
       var content = document.getElementById("maps");
       content.innerHTML = text;
+      text = text.replace(/[\n\r]/g, "");
+      maps = JSON.parse(text);
     });
   }
   
@@ -114,24 +115,24 @@
 </script>
 </head>
 <body>     
-<h1>SQL Mapper</h1>
+<h1>SQL SYNC</h1>
 <div id="input_area" style="clear:right">
-  <div id="ImportFilters" style="background: none repeat scroll 0 0 #E4EDF7;float:left;margin: 10 10 10 10;border: 1px solid #CCCCCC;padding: 15px;border-radius: 4px 4px 4px 4px">
-  <h4 style="margin:0px">Mapping and Filter File:</h4><br />
-  Text File: <input type="file" id="filtersmaps" name="filtersmaps"/> <br />
-  <button onclick="ImportFiltersMaps()" style="margin-top:10">Load Filters</button><br />
-  </div>
-  <div id="Import_Status" style="width:400px;height:300;clear:right;background: none repeat scroll 0 0 #E4EDF7;float:left;margin: 10 10 10 10;border: 1px solid #CCCCCC;padding: 15px;border-radius: 4px 4px 4px 4px">
+  <div id="ImportStatus">
   <h4 style="margin:0px">SQL Import Status:</h4><br />
   <div id="Status"></div>
   </div>
-  <div id="ImportCSV" style="background: none repeat scroll 0 0 #E4EDF7;float:left;margin: 10 10 10 10;border: 1px solid #CCCCCC;padding: 15px;border-radius: 4px 4px 4px 4px">
+  <div id="ImportFilters">
+  <h4 style="margin:0px">Mapping File:</h4><br />
+  Text File: <input type="file" id="mapsfile" name="mapsfile"/> <br />
+  <button onclick="ImportMaps()" style="margin-top:10">Load Filters</button><br />
+  </div>
+  <div id="ImportCSV">
   <h4 style="margin:0px">From: (CSV <span id="CSVStatus"></span>)</h4><br />
   CSV File: <input type="file" id="files" name="file"/> <br />
   <button onclick="ImportCSV()" style="margin-top:10">Import CSV</button><br />
   </div>
   <div id="databases" style="width:400 px; clear:left">
-    <div id="LoginFrom" style="width:400px;background: none repeat scroll 0 0 #E4EDF7;float:left;margin: 10 10 10 10;border: 1px solid #CCCCCC;padding: 15px;border-radius: 4px 4px 4px 4px">
+    <div id="LoginFrom">
     <h4 style="margin:0px">From SQL: (<span id="FromStatus">Database</span>)</h4><br />
     Username: <input type="text" name="from_username" id="from_username" style="margin: 0 0 4px 4px;"/><br />
     Password: <input type="password" name="from_password" id="from_password" style="margin: 0 0 4px 4px;"/><br />
@@ -139,7 +140,7 @@
     <button onclick="LoginFrom()" style="margin-top:10">Login</button><br />
     <div id="FromStatusMessage"></div>
     </div>
-    <div id="LoginTo" style="width:400px;background: none repeat scroll 0 0 #E4EDF7;float:left;margin: 10 10 10 10;border: 1px solid #CCCCCC;padding: 15px;border-radius: 4px 4px 4px 4px">
+    <div id="LoginTo">
     <h4 style="margin:0px">To SQL: (<span id="ToStatus">Database</span>)</h4><br />
     Username: <input type="text" name="to_username" id="to_username" style="margin: 0 0 4px 4px;"/><br />
     Password: <input type="password" name="to_password" id="to_password" style="margin: 0 0 4px 4px;"/><br />
