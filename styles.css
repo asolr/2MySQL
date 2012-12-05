@@ -1,0 +1,50 @@
+#ImportStatus {
+  width : 850px;
+  height : 150;
+  clear : right;
+  background : none repeat scroll 0 0 #E4EDF7;
+  float : left;
+  margin : 10 10 10 10;
+  border : 1px solid #CCCCCC;
+  padding : 15px;
+  border-radius : 4px 4px 4px 4px
+}
+
+#ImportFilters {
+  background: none repeat scroll 0 0 #E4EDF7;
+  float:left;
+  clear: left;
+  margin: 10 10 10 10;
+  border: 1px solid #CCCCCC;
+  padding: 15px;
+  border-radius: 4px 4px 4px 4px
+}
+
+#ImportCSV {
+  background: none repeat scroll 0 0 #E4EDF7;
+  float:left;
+  margin: 10 10 10 10;
+  border: 1px solid #CCCCCC;
+  padding: 15px;
+  border-radius: 4px 4px 4px 4px
+}
+
+#LoginFrom {
+  width:400px;
+  background: none repeat scroll 0 0 #E4EDF7;
+  float:left;
+  margin: 10 10 10 10;
+  border: 1px solid #CCCCCC;
+  padding: 15px;
+  border-radius: 4px 4px 4px 4px
+}
+
+#LoginTo {
+  width:400px;
+  background: none repeat scroll 0 0 #E4EDF7;
+  float:left;
+  margin: 10 10 10 10;
+  border: 1px solid #CCCCCC;
+  padding: 15px;
+  border-radius: 4px 4px 4px 4px
+}
